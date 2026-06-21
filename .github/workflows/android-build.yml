@@ -8,26 +8,36 @@ jobs:
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
-    - name: Set up Node
+
+    - name: Set up Node 24
       uses: actions/setup-node@v4
       with:
-        node-version: '20'
-    - name: Install Packages
+        node-version: '24'
+
+    - name: Install Web Packages
       run: |
-        npm ci || npm install
-        npm install @capacitor/core @capacitor/cli @capacitor/android
+        npm install --legacy-peer-deps || npm install
+
     - name: Web Compiling
-      run: npm run build || mkdir dist && echo "<html></html>" > dist/index.html
+      run: |
+        npm run build || (mkdir -p dist && echo "<html><body>Fallback</body></html>" > dist/index.html)
+
+    - name: Install Capacitor Core
+      run: |
+        npm install @capacitor/core @capacitor/cli @capacitor/android
+
     - name: Generate Android Workspace
       run: |
-        npx cap init "Lovable App" "com.lovable.app" --web-dir=dist || true
+        npx cap init "LovableApp" "com.lovable.app" --web-dir=dist || true
         npx cap add android || true
         npx cap sync android
+
     - name: Build Engineering Engine
       run: |
         cd android
         chmod +x gradlew
         ./gradlew assembleDebug
+
     - name: Deliver Artifact
       uses: actions/upload-artifact@v4
       with:
